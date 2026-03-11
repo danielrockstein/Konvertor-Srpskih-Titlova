@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Konvertor Srpskih Titlova - Ćirilica ⟷ Latinica</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+        <!-- Header -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h1 class="text-3xl font-bold text-indigo-900 mb-2">Konvertor Srpskih Titlova</h1>
+            <p class="text-gray-600">Konvertujte srpske titlove između ćirilice i latinice</p>
+            <p class="text-sm text-gray-500 mt-2">Podržava: SRT, SUB, TXT, ASS | Kodiranja: UTF-8, CP-1251, CP-1250</p>
+        </div>
+
+        <!-- Conversion Direction Selection -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Smer Konverzije</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <label class="flex items-center p-4 border-2 border-indigo-300 rounded-lg cursor-pointer hover:bg-indigo-50 transition-colors">
+                    <input type="radio" name="direction" value="cyrillic-to-latin" checked class="mr-3 text-indigo-600 focus:ring-indigo-500">
+                    <div>
+                        <span class="font-semibold text-gray-800">Ћирилица → Латиница</span>
+                        <p class="text-sm text-gray-600 mt-1">Конвертује ћирилични текст у латиницу</p>
+                    </div>
+                </label>
+                <label class="flex items-center p-4 border-2 border-indigo-300 rounded-lg cursor-pointer hover:bg-indigo-50 transition-colors">
+                    <input type="radio" name="direction" value="latin-to-cyrillic" class="mr-3 text-indigo-600 focus:ring-indigo-500">
+                    <div>
+                        <span class="font-semibold text-gray-800">Latinica → Ćirilica</span>
+                        <p class="text-sm text-gray-600 mt-1">Konvertuje latinični tekst u ćirilicu</p>
+                    </div>
+                </label>
+            </div>
+        </div>
+
+        <!-- Upload Section -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Učitajte Fajl sa Titlovima</h2>
+            
+            <!-- Drag & Drop Zone -->
+            <div id="dropZone" class="border-4 border-dashed border-indigo-300 rounded-lg p-8 text-center cursor-pointer hover:border-indigo-500 transition-colors mb-4">
+                <svg class="mx-auto h-12 w-12 text-indigo-400 mb-3" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                    <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+                <p class="text-gray-600 mb-2">Prevucite i ispustite fajl sa titlovima ovde</p>
+                <p class="text-sm text-gray-500 mb-3">ili</p>
+                <input type="file" id="fileInput" accept=".srt,.sub,.txt,.ass" class="hidden">
+                <button id="browseBtn" class="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition-colors">
+                    Pregledaj Fajlove
+                </button>
+            </div>
+
+            <!-- Encoding Selection -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Ulazno Kodiranje 
+                        <span id="autoDetectBadge" class="hidden ml-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded">Auto-detected</span>
+                    </label>
+                    <select id="inputEncoding" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        <option value="utf-8">UTF-8</option>
+                        <option value="windows-1251">CP-1251 (Windows Ćirilica)</option>
+                        <option value="windows-1250">CP-1250 (Windows Latinica)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Izlazno Kodiranje</label>
+                    <select id="outputEncoding" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        <option value="utf-8">UTF-8</option>
+                        <option value="windows-1250">CP-1250 (Windows Latinica)</option>
+                        <option value="windows-1251">CP-1251 (Windows Ćirilica)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- File Info -->
+            <div id="fileInfo" class="hidden bg-indigo-50 rounded-lg p-4 mb-4">
+                <p class="text-sm text-indigo-800"><span class="font-semibold">Fajl:</span> <span id="fileName"></span></p>
+                <p class="text-sm text-indigo-800"><span class="font-semibold">Veličina:</span> <span id="fileSize"></span></p>
+                <p class="text-sm text-indigo-800"><span class="font-semibold">Format:</span> <span id="fileFormat"></span></p>
+                <p class="text-sm text-indigo-800"><span class="font-semibold">Detektovano kodiranje:</span> <span id="detectedEncoding"></span></p>
+                <p class="text-sm text-indigo-800"><span class="font-semibold">Detektovano pismo:</span> <span id="detectedScript"></span></p>
+            </div>
+
+            <!-- Convert Button -->
+            <button id="convertBtn" class="w-full bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed" disabled>
+                <span id="convertBtnText">Konvertuj u Latinicu</span>
+            </button>
+        </div>
+
+        <!-- Preview Section -->
+        <div id="previewSection" class="hidden bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Pregled</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <h3 class="text-sm font-semibold text-gray-700 mb-2">Original <span id="originalLabel">(Ćirilica)</span></h3>
+                    <pre id="originalPreview" class="bg-gray-50 border border-gray-300 rounded-lg p-4 text-sm overflow-auto max-h-96"></pre>
+                </div>
+                <div>
+                    <h3 class="text-sm font-semibold text-gray-700 mb-2">Konvertovano <span id="convertedLabel">(Latinica)</span></h3>
+                    <pre id="convertedPreview" class="bg-green-50 border border-green-300 rounded-lg p-4 text-sm overflow-auto max-h-96"></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- Download Section -->
+        <div id="downloadSection" class="hidden bg-white rounded-lg shadow-lg p-6">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Preuzimanje</h2>
+            <button id="downloadBtn" class="w-full bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors font-semibold">
+                Preuzmi Konvertovani Fajl
+            </button>
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center mt-8 text-gray-600 text-sm">
+            <p>Konvertuje srpski tekst između ćirilice i latinice zadržavajući HTML tagove i formatiranje titlova</p>
+        </div>
+    </div>
+
+    <script>
+        // Serbian Cyrillic to Latin mapping
+        const cyrillicToLatin = {
+            'А': 'A', 'а': 'a',
+            'Б': 'B', 'б': 'b',
+            'В': 'V', 'в': 'v',
+            'Г': 'G', 'г': 'g',
+            'Д': 'D', 'д': 'd',
+            'Ђ': 'Đ', 'ђ': 'đ',
+            'Е': 'E', 'е': 'e',
+            'Ж': 'Ž', 'ж': 'ž',
+            'З': 'Z', 'з': 'z',
+            'И': 'I', 'и': 'i',
+            'Ј': 'J', 'ј': 'j',
+            'К': 'K', 'к': 'k',
+            'Л': 'L', 'л': 'l',
+            'Љ': 'Lj', 'љ': 'lj',
+            'М': 'M', 'м': 'm',
+            'Н': 'N', 'н': 'n',
+            'Њ': 'Nj', 'њ': 'nj',
+            'О': 'O', 'о': 'o',
+            'П': 'P', 'п': 'p',
+            'Р': 'R', 'р': 'r',
+            'С': 'S', 'с': 's',
+            'Т': 'T', 'т': 't',
+            'Ћ': 'Ć', 'ћ': 'ć',
+            'У': 'U', 'у': 'u',
+            'Ф': 'F', 'ф': 'f',
+            'Х': 'H', 'х': 'h',
+            'Ц': 'C', 'ц': 'c',
+            'Ч': 'Č', 'ч': 'č',
+            'Џ': 'Dž', 'џ': 'dž',
+            'Ш': 'Š', 'ш': 'š'
+        };
+
+        // Serbian Latin to Cyrillic mapping
+        const latinToCyrillic = {
+            'A': 'А', 'a': 'а',
+            'B': 'Б', 'b': 'б',
+            'V': 'В', 'v': 'в',
+            'G': 'Г', 'g': 'г',
+            'D': 'Д', 'd': 'д',
+            'Đ': 'Ђ', 'đ': 'ђ',
+            'E': 'Е', 'e': 'е',
+            'Ž': 'Ж', 'ž': 'ж',
+            'Z': 'З', 'z': 'з',
+            'I': 'И', 'i': 'и',
+            'J': 'Ј', 'j': 'ј',
+            'K': 'К', 'k': 'к',
+            'L': 'Л', 'l': 'л',
+            'M': 'М', 'm': 'м',
+            'N': 'Н', 'n': 'н',
+            'O': 'О', 'o': 'о',
+            'P': 'П', 'p': 'п',
+            'R': 'Р', 'r': 'р',
+            'S': 'С', 's': 'с',
+            'T': 'Т', 't': 'т',
+            'Ć': 'Ћ', 'ć': 'ћ',
+            'U': 'У', 'u': 'у',
+            'F': 'Ф', 'f': 'ф',
+            'H': 'Х', 'h': 'х',
+            'C': 'Ц', 'c': 'ц',
+            'Č': 'Ч', 'č': 'ч',
+            'Š': 'Ш', 'š': 'ш'
+        };
+
+        let currentFile = null;
+        let originalContent = '';
+        let convertedContent = '';
+        let fileExtension = '';
+        let hasConverted = false;
+        let isAutoDetecting = false;
+
+        // DOM Elements
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const browseBtn = document.getElementById('browseBtn');
+        const convertBtn = document.getElementById('convertBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const fileInfo = document.getElementById('fileInfo');
+        const previewSection = document.getElementById('previewSection');
+        const downloadSection = document.getElementById('downloadSection');
+        const directionRadios = document.querySelectorAll('input[name="direction"]');
+        const inputEncodingSelect = document.getElementById('inputEncoding');
+        const outputEncodingSelect = document.getElementById('outputEncoding');
+        const autoDetectBadge = document.getElementById('autoDetectBadge');
+
+        // Event Listeners
+        browseBtn.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', handleFileSelect);
+        convertBtn.addEventListener('click', convertFile);
+        downloadBtn.addEventListener('click', downloadFile);
+
+        directionRadios.forEach(radio => {
+            radio.addEventListener('change', handleDirectionChange);
+        });
+
+        inputEncodingSelect.addEventListener('change', () => {
+            if (currentFile && !isAutoDetecting) {
+                autoDetectBadge.classList.add('hidden');
+                readFile(currentFile);
+                if (hasConverted) {
+                    setTimeout(() => convertFile(), 100);
+                }
+            }
+        });
+
+        function handleDirectionChange() {
+            const direction = document.querySelector('input[name="direction"]:checked').value;
+            const convertBtnText = document.getElementById('convertBtnText');
+            const originalLabel = document.getElementById('originalLabel');
+            const convertedLabel = document.getElementById('convertedLabel');
+            
+            if (direction === 'cyrillic-to-latin') {
+                convertBtnText.textContent = 'Konvertuj u Latinicu';
+                originalLabel.textContent = '(Ćirilica)';
+                convertedLabel.textContent = '(Latinica)';
+            } else {
+                convertBtnText.textContent = 'Konvertuj u Ćirilicu';
+                originalLabel.textContent = '(Latinica)';
+                convertedLabel.textContent = '(Ćirilica)';
+            }
+            
+            if (currentFile && hasConverted) {
+                convertFile();
+            }
+        }
+
+        // Drag and Drop
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('border-indigo-500', 'bg-indigo-50');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('border-indigo-500', 'bg-indigo-50');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('border-indigo-500', 'bg-indigo-50');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        });
+
+        function handleFileSelect(e) {
+            const files = e.target.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        }
+
+        function handleFile(file) {
+            currentFile = file;
+            hasConverted = false;
+            const fileName = file.name;
+            const fileSize = formatFileSize(file.size);
+            fileExtension = fileName.split('.').pop().toLowerCase();
+
+            document.getElementById('fileName').textContent = fileName;
+            document.getElementById('fileSize').textContent = fileSize;
+            document.getElementById('fileFormat').textContent = fileExtension.toUpperCase();
+
+            fileInfo.classList.remove('hidden');
+            convertBtn.disabled = false;
+            previewSection.classList.add('hidden');
+            downloadSection.classList.add('hidden');
+
+            // Auto-detect encoding
+            detectAndReadFile(file);
+        }
+
+        function detectAndReadFile(file) {
+            isAutoDetecting = true;
+            const reader = new FileReader();
+            reader.readAsArrayBuffer(file);
+            reader.onload = function(e) {
+                const bytes = new Uint8Array(e.target.result);
+                const detectionResult = detectEncoding(bytes);
+                
+                // Update UI
+                inputEncodingSelect.value = detectionResult.encoding;
+                autoDetectBadge.classList.remove('hidden');
+                
+                const encodingNames = {
+                    'utf-8': 'UTF-8',
+                    'windows-1251': 'CP-1251 (Ćirilica)',
+                    'windows-1250': 'CP-1250 (Latinica)'
+                };
+                document.getElementById('detectedEncoding').textContent = encodingNames[detectionResult.encoding];
+                document.getElementById('detectedScript').textContent = detectionResult.script === 'cyrillic' ? 'Ćirilica' : 'Latinica';
+                
+                // Auto-select conversion direction based on detected script
+                if (detectionResult.script === 'cyrillic') {
+                    // Cyrillic detected -> convert to Latin
+                    document.querySelector('input[name="direction"][value="cyrillic-to-latin"]').checked = true;
+                } else {
+                    // Latin detected -> convert to Cyrillic
+                    document.querySelector('input[name="direction"][value="latin-to-cyrillic"]').checked = true;
+                }
+                handleDirectionChange();
+                
+                isAutoDetecting = false;
+                
+                // Read file with detected encoding
+                readFile(file);
+            };
+        }
+
+        function detectEncoding(bytes) {
+            const sampleSize = Math.min(bytes.length, 10000);
+            
+            // First check if it's valid UTF-8
+            if (isValidUTF8(bytes)) {
+                const text = new TextDecoder('utf-8').decode(bytes);
+                
+                // Check if it contains Cyrillic characters
+                if (/[\u0400-\u04FF]/.test(text)) {
+                    return { encoding: 'utf-8', script: 'cyrillic' };
+                }
+                // Check for Serbian Latin special characters
+                if (/[ŠšŽžČčĆćĐđ]/.test(text)) {
+                    return { encoding: 'utf-8', script: 'latin' };
+                }
+                
+                return { encoding: 'utf-8', script: 'latin' };
+            }
+            
+            // Not valid UTF-8, check for CP-1251 or CP-1250
+            let cyrillicRangeCount = 0; // 0xC0-0xFF range (Cyrillic in CP-1251)
+            let cp1251SpecificCount = 0; // Serbian Cyrillic specific
+            let cp1250SpecificCount = 0; // Serbian Latin specific
+            
+            for (let i = 0; i < sampleSize; i++) {
+                const byte = bytes[i];
+                
+                // Count bytes in 0xC0-0xFF range (main Cyrillic block in CP-1251)
+                if (byte >= 0xC0 && byte <= 0xFF) {
+                    cyrillicRangeCount++;
+                }
+                
+                // Serbian Cyrillic specific in CP-1251:
+                // Ђ=0x80, ђ=0x90, Љ=0x8A, љ=0x9A, Њ=0x8C, њ=0x9C, Ћ=0x8E, ћ=0x9E, Џ=0x8F, џ=0x9F
+                if (byte === 0x80 || byte === 0x90) { // Ђ, ђ - strong indicator
+                    cp1251SpecificCount += 10;
+                }
+                if (byte === 0x8F || byte === 0x9F) { // Џ, џ
+                    cp1251SpecificCount += 5;
+                }
+                if (byte === 0x8A || byte === 0x9A || byte === 0x8C || byte === 0x9C || 
+                    byte === 0x8E || byte === 0x9E) { // Љ, љ, Њ, њ, Ћ, ћ (ambiguous with CP-1250)
+                    // Only count if we have high Cyrillic range presence
+                    if (cyrillicRangeCount > i * 0.1) {
+                        cp1251SpecificCount += 2;
+                    }
+                }
+                
+                // CP-1250 specific that are NOT in CP-1251 Cyrillic range:
+                // Č=0xC8, č=0xE8, Ć=0xC6, ć=0xE6, Đ=0xD0, đ=0xF0
+                // But these overlap with Cyrillic 0xC0-0xFF!
+                // Better CP-1250 indicators that don't overlap:
+                // These bytes are used for Latin in CP-1250 context
+                
+                // Check context: if 0xC8, 0xE8 appear with other Latin ASCII
+                if (i > 0 && i < bytes.length - 1) {
+                    const prevByte = bytes[i - 1];
+                    const nextByte = bytes[i + 1];
+                    const isLatinContext = (prevByte >= 0x41 && prevByte <= 0x7A) || 
+                                          (nextByte >= 0x41 && nextByte <= 0x7A);
+                    
+                    if (isLatinContext) {
+                        if (byte === 0xC8 || byte === 0xE8 || // Č, č
+                            byte === 0xC6 || byte === 0xE6 || // Ć, ć
+                            byte === 0xD0 || byte === 0xF0) { // Đ, đ
+                            cp1250SpecificCount += 3;
+                        }
+                        if (byte === 0x8A || byte === 0x9A) { // Š, š
+                            cp1250SpecificCount += 5;
+                        }
+                    }
+                }
+            }
+            
+            const cyrillicRatio = cyrillicRangeCount / sampleSize;
+            
+            // Decision logic
+            // Strong CP-1251 indicators
+            if (cp1251SpecificCount > 5 || cyrillicRatio > 0.20) {
+                return { encoding: 'windows-1251', script: 'cyrillic' };
+            }
+            
+            // Strong CP-1250 indicators
+            if (cp1250SpecificCount > 5) {
+                return { encoding: 'windows-1250', script: 'latin' };
+            }
+            
+            // Moderate thresholds
+            if (cyrillicRatio > 0.10 && cp1251SpecificCount >= cp1250SpecificCount) {
+                return { encoding: 'windows-1251', script: 'cyrillic' };
+            }
+            
+            // Default to CP-1250 for Serbian content if uncertain
+            return { encoding: 'windows-1250', script: 'latin' };
+        }
+
+        function isValidUTF8(bytes) {
+            let i = 0;
+            while (i < bytes.length) {
+                const byte = bytes[i];
+                
+                if (byte <= 0x7F) {
+                    i++;
+                } else if ((byte & 0xE0) === 0xC0) {
+                    if (i + 1 >= bytes.length) return false;
+                    if ((bytes[i + 1] & 0xC0) !== 0x80) return false;
+                    i += 2;
+                } else if ((byte & 0xF0) === 0xE0) {
+                    if (i + 2 >= bytes.length) return false;
+                    if ((bytes[i + 1] & 0xC0) !== 0x80) return false;
+                    if ((bytes[i + 2] & 0xC0) !== 0x80) return false;
+                    i += 3;
+                } else if ((byte & 0xF8) === 0xF0) {
+                    if (i + 3 >= bytes.length) return false;
+                    if ((bytes[i + 1] & 0xC0) !== 0x80) return false;
+                    if ((bytes[i + 2] & 0xC0) !== 0x80) return false;
+                    if ((bytes[i + 3] & 0xC0) !== 0x80) return false;
+                    i += 4;
+                } else {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        function readFile(file) {
+            const reader = new FileReader();
+            const encoding = document.getElementById('inputEncoding').value;
+
+            const onFileRead = (content) => {
+                originalContent = content;
+                document.getElementById('originalPreview').textContent = originalContent.substring(0, 1000) + (originalContent.length > 1000 ? '\n...' : '');
+                
+                if (hasConverted) {
+                    convertFile();
+                }
+            };
+
+            if (encoding === 'windows-1251') {
+                reader.readAsArrayBuffer(file);
+                reader.onload = function(e) {
+                    const bytes = new Uint8Array(e.target.result);
+                    onFileRead(decodeWindows1251(bytes));
+                };
+            } else if (encoding === 'windows-1250') {
+                reader.readAsArrayBuffer(file);
+                reader.onload = function(e) {
+                    const bytes = new Uint8Array(e.target.result);
+                    onFileRead(decodeWindows1250(bytes));
+                };
+            } else {
+                reader.onload = function(e) {
+                    onFileRead(e.target.result);
+                };
+                reader.readAsText(file, encoding);
+            }
+        }
+
+        function decodeWindows1250(bytes) {
+            let result = '';
+            for (let i = 0; i < bytes.length; i++) {
+                const byte = bytes[i];
+                if (byte < 128) {
+                    result += String.fromCharCode(byte);
+                } else {
+                    const cp1250Map = {
+                        0x80: 0x20AC, 0x82: 0x201A, 0x84: 0x201E, 0x85: 0x2026, 0x86: 0x2020, 0x87: 0x2021,
+                        0x89: 0x2030, 0x8A: 0x0160, 0x8B: 0x2039, 0x8C: 0x015A, 0x8D: 0x0164, 0x8E: 0x017D, 0x8F: 0x0179,
+                        0x91: 0x2018, 0x92: 0x2019, 0x93: 0x201C, 0x94: 0x201D, 0x95: 0x2022, 0x96: 0x2013, 0x97: 0x2014,
+                        0x99: 0x2122, 0x9A: 0x0161, 0x9B: 0x203A, 0x9C: 0x015B, 0x9D: 0x0165, 0x9E: 0x017E, 0x9F: 0x017A,
+                        0xA0: 0x00A0, 0xA1: 0x02C7, 0xA2: 0x02D8, 0xA3: 0x0141, 0xA4: 0x00A4, 0xA5: 0x0104, 0xA6: 0x00A6,
+                        0xA7: 0x00A7, 0xA8: 0x00A8, 0xA9: 0x00A9, 0xAA: 0x015E, 0xAB: 0x00AB, 0xAC: 0x00AC, 0xAD: 0x00AD,
+                        0xAE: 0x00AE, 0xAF: 0x017B, 0xB0: 0x00B0, 0xB1: 0x00B1, 0xB2: 0x02DB, 0xB3: 0x0142, 0xB4: 0x00B4,
+                        0xB5: 0x00B5, 0xB6: 0x00B6, 0xB7: 0x00B7, 0xB8: 0x00B8, 0xB9: 0x0105, 0xBA: 0x015F, 0xBB: 0x00BB,
+                        0xBC: 0x013D, 0xBD: 0x02DD, 0xBE: 0x013E, 0xBF: 0x017C, 0xC0: 0x0154, 0xC1: 0x00C1, 0xC2: 0x00C2,
+                        0xC3: 0x0102, 0xC4: 0x00C4, 0xC5: 0x0139, 0xC6: 0x0106, 0xC7: 0x00C7, 0xC8: 0x010C, 0xC9: 0x00C9,
+                        0xCA: 0x0118, 0xCB: 0x00CB, 0xCC: 0x011A, 0xCD: 0x00CD, 0xCE: 0x00CE, 0xCF: 0x010E, 0xD0: 0x0110,
+                        0xD1: 0x0143, 0xD2: 0x0147, 0xD3: 0x00D3, 0xD4: 0x00D4, 0xD5: 0x0150, 0xD6: 0x00D6, 0xD7: 0x00D7,
+                        0xD8: 0x0158, 0xD9: 0x016E, 0xDA: 0x00DA, 0xDB: 0x0170, 0xDC: 0x00DC, 0xDD: 0x00DD, 0xDE: 0x0162,
+                        0xDF: 0x00DF, 0xE0: 0x0155, 0xE1: 0x00E1, 0xE2: 0x00E2, 0xE3: 0x0103, 0xE4: 0x00E4, 0xE5: 0x013A,
+                        0xE6: 0x0107, 0xE7: 0x00E7, 0xE8: 0x010D, 0xE9: 0x00E9, 0xEA: 0x0119, 0xEB: 0x00EB, 0xEC: 0x011B,
+                        0xED: 0x00ED, 0xEE: 0x00EE, 0xEF: 0x010F, 0xF0: 0x0111, 0xF1: 0x0144, 0xF2: 0x0148, 0xF3: 0x00F3,
+                        0xF4: 0x00F4, 0xF5: 0x0151, 0xF6: 0x00F6, 0xF7: 0x00F7, 0xF8: 0x0159, 0xF9: 0x016F, 0xFA: 0x00FA,
+                        0xFB: 0x0171, 0xFC: 0x00FC, 0xFD: 0x00FD, 0xFE: 0x0163, 0xFF: 0x02D9
+                    };
+                    
+                    if (cp1250Map[byte]) {
+                        result += String.fromCharCode(cp1250Map[byte]);
+                    } else {
+                        result += String.fromCharCode(byte);
+                    }
+                }
+            }
+            return result;
+        }
+
+        function decodeWindows1251(bytes) {
+            let result = '';
+            for (let i = 0; i < bytes.length; i++) {
+                const byte = bytes[i];
+                if (byte < 128) {
+                    result += String.fromCharCode(byte);
+                } else {
+                    const cp1251Map = {
+                        0x80: 0x0402, 0x81: 0x0403, 0x82: 0x201A, 0x83: 0x0453, 0x84: 0x201E, 0x85: 0x2026, 0x86: 0x2020, 0x87: 0x2021,
+                        0x88: 0x20AC, 0x89: 0x2030, 0x8A: 0x0409, 0x8B: 0x2039, 0x8C: 0x040A, 0x8D: 0x040C, 0x8E: 0x040B, 0x8F: 0x040F,
+                        0x90: 0x0452, 0x91: 0x2018, 0x92: 0x2019, 0x93: 0x201C, 0x94: 0x201D, 0x95: 0x2022, 0x96: 0x2013, 0x97: 0x2014,
+                        0x99: 0x2122, 0x9A: 0x0459, 0x9B: 0x203A, 0x9C: 0x045A, 0x9D: 0x045C, 0x9E: 0x045B, 0x9F: 0x045F,
+                        0xA0: 0x00A0, 0xA1: 0x040E, 0xA2: 0x045E, 0xA3: 0x0408, 0xA4: 0x00A4, 0xA5: 0x0490, 0xA6: 0x00A6, 0xA7: 0x00A7,
+                        0xA8: 0x0401, 0xA9: 0x00A9, 0xAA: 0x0404, 0xAB: 0x00AB, 0xAC: 0x00AC, 0xAD: 0x00AD, 0xAE: 0x00AE, 0xAF: 0x0407,
+                        0xB0: 0x00B0, 0xB1: 0x00B1, 0xB2: 0x0406, 0xB3: 0x0456, 0xB4: 0x0491, 0xB5: 0x00B5, 0xB6: 0x00B6, 0xB7: 0x00B7,
+                        0xB8: 0x0451, 0xB9: 0x2116, 0xBA: 0x0454, 0xBB: 0x00BB, 0xBC: 0x0458, 0xBD: 0x0405, 0xBE: 0x0455, 0xBF: 0x0457
+                    };
+                    
+                    if (byte >= 0xC0 && byte <= 0xFF) {
+                        result += String.fromCharCode(0x0410 + (byte - 0xC0));
+                    } else if (cp1251Map[byte]) {
+                        result += String.fromCharCode(cp1251Map[byte]);
+                    } else {
+                        result += String.fromCharCode(byte);
+                    }
+                }
+            }
+            return result;
+        }
+
+        function convertFile() {
+            const direction = document.querySelector('input[name="direction"]:checked').value;
+            
+            if (direction === 'cyrillic-to-latin') {
+                convertedContent = convertCyrillicToLatin(originalContent);
+            } else {
+                convertedContent = convertLatinToCyrillic(originalContent);
+            }
+            
+            document.getElementById('convertedPreview').textContent = convertedContent.substring(0, 1000) + (convertedContent.length > 1000 ? '\n...' : '');
+            
+            previewSection.classList.remove('hidden');
+            downloadSection.classList.remove('hidden');
+            hasConverted = true;
+        }
+
+        function convertCyrillicToLatin(text) {
+            let result = '';
+            let inTag = false;
+            let i = 0;
+
+            while (i < text.length) {
+                const char = text[i];
+
+                if (char === '<') {
+                    inTag = true;
+                    result += char;
+                    i++;
+                    continue;
+                }
+
+                if (char === '>') {
+                    inTag = false;
+                    result += char;
+                    i++;
+                    continue;
+                }
+
+                if (inTag) {
+                    result += char;
+                    i++;
+                    continue;
+                }
+
+                if (cyrillicToLatin[char]) {
+                    result += cyrillicToLatin[char];
+                } else {
+                    result += char;
+                }
+
+                i++;
+            }
+
+            return result;
+        }
+
+        function convertLatinToCyrillic(text) {
+            let result = '';
+            let inTag = false;
+            let i = 0;
+
+            while (i < text.length) {
+                const char = text[i];
+
+                if (char === '<') {
+                    inTag = true;
+                    result += char;
+                    i++;
+                    continue;
+                }
+
+                if (char === '>') {
+                    inTag = false;
+                    result += char;
+                    i++;
+                    continue;
+                }
+
+                if (inTag) {
+                    result += char;
+                    i++;
+                    continue;
+                }
+
+                if (i < text.length - 1) {
+                    const twoChars = char + text[i + 1];
+                    
+                    if (twoChars === 'Lj') {
+                        result += 'Љ';
+                        i += 2;
+                        continue;
+                    } else if (twoChars === 'lj') {
+                        result += 'љ';
+                        i += 2;
+                        continue;
+                    } else if (twoChars === 'LJ') {
+                        result += 'Љ';
+                        i += 2;
+                        continue;
+                    } else if (twoChars === 'Nj') {
+                        result += 'Њ';
+                        i += 2;
+                        continue;
+                    } else if (twoChars === 'nj') {
+                        result += 'њ';
+                        i += 2;
+                        continue;
+                    } else if (twoChars === 'NJ') {
+                        result += 'Њ';
+                        i += 2;
+                        continue;
+                    } else if (twoChars === 'Dž' || twoChars === 'DŽ') {
+                        result += 'Џ';
+                        i += 2;
+                        continue;
+                    } else if (twoChars === 'dž') {
+                        result += 'џ';
+                        i += 2;
+                        continue;
+                    }
+                }
+
+                if (latinToCyrillic[char]) {
+                    result += latinToCyrillic[char];
+                } else {
+                    result += char;
+                }
+
+                i++;
+            }
+
+            return result;
+        }
+
+        function downloadFile() {
+            const outputEncoding = document.getElementById('outputEncoding').value;
+            const direction = document.querySelector('input[name="direction"]:checked').value;
+            let blob;
+
+            if (outputEncoding === 'windows-1250') {
+                const bytes = encodeWindows1250(convertedContent);
+                blob = new Blob([bytes], { type: 'application/octet-stream' });
+            } else if (outputEncoding === 'windows-1251') {
+                const bytes = encodeWindows1251(convertedContent);
+                blob = new Blob([bytes], { type: 'application/octet-stream' });
+            } else {
+                blob = new Blob([convertedContent], { type: 'text/plain;charset=utf-8' });
+            }
+
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            
+            const originalName = currentFile.name;
+            const nameWithoutExt = originalName.substring(0, originalName.lastIndexOf('.'));
+            const suffix = direction === 'cyrillic-to-latin' ? '_latin' : '_cyrillic';
+            a.download = `${nameWithoutExt}${suffix}.${fileExtension}`;
+            
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function encodeWindows1251(text) {
+            const cp1251ReverseMap = {
+                0x0402: 0x80, 0x0403: 0x81, 0x201A: 0x82, 0x0453: 0x83, 0x201E: 0x84, 0x2026: 0x85, 0x2020: 0x86, 0x2021: 0x87,
+                0x20AC: 0x88, 0x2030: 0x89, 0x0409: 0x8A, 0x2039: 0x8B, 0x040A: 0x8C, 0x040C: 0x8D, 0x040B: 0x8E, 0x040F: 0x8F,
+                0x0452: 0x90, 0x2018: 0x91, 0x2019: 0x92, 0x201C: 0x93, 0x201D: 0x94, 0x2022: 0x95, 0x2013: 0x96, 0x2014: 0x97,
+                0x2122: 0x99, 0x0459: 0x9A, 0x203A: 0x9B, 0x045A: 0x9C, 0x045C: 0x9D, 0x045B: 0x9E, 0x045F: 0x9F,
+                0x00A0: 0xA0, 0x040E: 0xA1, 0x045E: 0xA2, 0x0408: 0xA3, 0x00A4: 0xA4, 0x0490: 0xA5, 0x00A6: 0xA6, 0x00A7: 0xA7,
+                0x0401: 0xA8, 0x00A9: 0xA9, 0x0404: 0xAA, 0x00AB: 0xAB, 0x00AC: 0xAC, 0x00AD: 0xAD, 0x00AE: 0xAE, 0x0407: 0xAF,
+                0x00B0: 0xB0, 0x00B1: 0xB1, 0x0406: 0xB2, 0x0456: 0xB3, 0x0491: 0xB4, 0x00B5: 0xB5, 0x00B6: 0xB6, 0x00B7: 0xB7,
+                0x0451: 0xB8, 0x2116: 0xB9, 0x0454: 0xBA, 0x00BB: 0xBB, 0x0458: 0xBC, 0x0405: 0xBD, 0x0455: 0xBE, 0x0457: 0xBF
+            };
+
+            const bytes = [];
+
+            for (let i = 0; i < text.length; i++) {
+                const char = text[i];
+                const code = char.charCodeAt(0);
+                
+                if (code < 128) {
+                    bytes.push(code);
+                }
+                else if (code >= 0x0410 && code <= 0x044F) {
+                    bytes.push(0xC0 + (code - 0x0410));
+                }
+                else if (cp1251ReverseMap[code] !== undefined) {
+                    bytes.push(cp1251ReverseMap[code]);
+                }
+                else {
+                    bytes.push(0x3F);
+                }
+            }
+
+            return new Uint8Array(bytes);
+        }
+
+        function encodeWindows1250(text) {
+            const cp1250Map = {
+                0x20AC: 0x80, 0x201A: 0x82, 0x201E: 0x84, 0x2026: 0x85, 0x2020: 0x86, 0x2021: 0x87,
+                0x2030: 0x89, 0x2039: 0x8B, 0x2018: 0x91, 0x2019: 0x92, 0x201C: 0x93, 0x201D: 0x94,
+                0x2022: 0x95, 0x2013: 0x96, 0x2014: 0x97, 0x2122: 0x99, 0x203A: 0x9B,
+                0x0160: 0x8A, 0x0161: 0x9A, 0x017D: 0x8E, 0x017E: 0x9E,
+                0x010C: 0xC8, 0x010D: 0xE8, 0x0106: 0xC6, 0x0107: 0xE6,
+                0x0110: 0xD0, 0x0111: 0xF0,
+                0x00A0: 0xA0, 0x0164: 0x8D, 0x0165: 0x9D,
+            };
+
+            const bytes = [];
+
+            for (let i = 0; i < text.length; i++) {
+                const char = text[i];
+                const code = char.charCodeAt(0);
+
+                if (code < 128) {
+                    bytes.push(code);
+                }
+                else if (cp1250Map[code] !== undefined) {
+                    bytes.push(cp1250Map[code]);
+                }
+                else if (code >= 0xA0 && code <= 0xFF) {
+                    bytes.push(code);
+                }
+                else {
+                    bytes.push(0x3F);
+                }
+            }
+
+            return new Uint8Array(bytes);
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+        }
+    </script>
+</body>
+</html>
